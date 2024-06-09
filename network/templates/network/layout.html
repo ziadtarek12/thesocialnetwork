@@ -1,0 +1,116 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>{% block title %}Social Network{% endblock %}</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <link type="text/css" href="{% static 'network/styles.css' %}" rel="stylesheet">
+        <script>
+            function Edit(target){
+                
+                console.log(target.parentElement);
+                const container = target.parentElement;
+                const form = container.querySelector('#form_edit');
+                form.setAttribute('class', 'd-block');
+                const text = container.querySelector('#text_content');
+                const button = container.querySelector('#save');
+                button.onclick = function(){
+                    fetch(`/edit/${button.value}`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        content : text.value
+                    })
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        // Print result
+                        console.log(result);
+                        container.querySelector('#post_content').innerHTML = result.content;
+                        form.setAttribute('class', 'd-none');
+
+                    });
+                };
+                
+            }
+            function Like(target){
+                const container = target.parentElement;
+                const counter = container.querySelector('#like_count');
+                const creator = container.querySelector('#post_creator');
+                console.log(target.value);
+                if (target.innerHTML.includes('Like')){
+                    fetch(`/like/${target.value}`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        creator : target.name,
+                        like: true
+                    })
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        // Print result
+                        console.log(result);
+                        counter.innerHTML = parseInt(counter.innerHTML) + 1;
+                        target.innerHTML = 'Unlike <i class="bi bi-heart-fill"></i>';
+                    });
+                }else{
+                    fetch(`/like/${target.value}`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        creator : target.name,
+                        like: false
+                    })
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        // Print result
+                        console.log(result);
+                        counter.innerHTML = parseInt(counter.innerHTML) - 1;
+                        target.innerHTML = 'Like <i class="bi bi-heart">';
+                    });
+                }
+                
+            }
+        </script>
+    </head>
+    <body>
+
+        <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #141d26;">
+            <a class="navbar-brand" href="#">Network</a>
+        
+            <div>
+              <ul class="navbar-nav mr-auto">
+                {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'profile' user.username %}"><strong>{{ user.username }}</strong></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'index' %}">All Posts</a>
+                      </li>
+                {% endif %}
+                
+                {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'following' %}">Following</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'logout' %}">Log Out</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">Log In</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'register' %}">Register</a>
+                    </li>
+                {% endif %}
+              </ul>
+            </div>
+          </nav>
+        
+        <div class="body">
+            {% block body %}
+            {% endblock %}
+        </div>
+    </body>
+</html>
